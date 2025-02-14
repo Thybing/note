@@ -20,9 +20,12 @@ void init_tree(int idx, int l, int r) {
 }
 
 void down_lazy(int idx,int l,int r) {
-    f[idx] += (r - l + 1) * lz[idx];
+    int m = (l + r) / 2;
     if(l != r) {
+        f[idx + idx] += (m - l + 1) * lz[idx];
         lz[idx + idx] += lz[idx];
+
+        f[idx + idx + 1] += (r - m) * lz[idx];
         lz[idx + idx + 1] += lz[idx];
     }
     lz[idx] = 0;
@@ -31,11 +34,11 @@ void down_lazy(int idx,int l,int r) {
 void update(int idx, int l, int r, int s, int t, ll k) {
     if(l == s && r == t) {
         lz[idx] += k;
+        f[idx] += (r - l + 1) * k;
         return;
     }
     else{
         down_lazy(idx,l,r);
-        f[idx] += (t - s + 1) * k;
         int m = (l + r) / 2;
         if(t <= m) {
             update(idx + idx,l,m,s,t,k);
@@ -45,14 +48,15 @@ void update(int idx, int l, int r, int s, int t, ll k) {
             update(idx + idx,l,m,s,m,k);
             update(idx + idx + 1,m + 1,r,m + 1,t,k);
         }
+        f[idx] = f[idx + idx] + f[idx + idx + 1];
     }
 }
 
 ll query(int idx,int l,int r,int s,int t) {
-    down_lazy(idx,l,r);
     if (l == s && r == t) {
         return f[idx];
     }
+    down_lazy(idx,l,r);
     int m = (l + r) / 2;
     if(t <= m) {
         return query(idx + idx,l,m,s,t);
