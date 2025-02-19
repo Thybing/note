@@ -1,5 +1,6 @@
 # ide
 .vscode/
+note.code-workspace
 
 #build
 bin/
