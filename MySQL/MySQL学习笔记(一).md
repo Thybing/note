@@ -4,26 +4,43 @@
 
 ## 常用的关键字(或许可能是关键字的组合？不是很懂。暂时跟着网课看)
 
-CREATE DATABASE
-用于创建资料库
+**创建资料库**
+```SQL
+CREATE DATABASE 数据库名 DEFAULT CHARACTER SET 字符编码;
+```
 e.g.
-CREATE DATABASE \`database_name`;
+```SQL
+CREATE DATABASE `database_name` DEFAULT CHARACTER SET utf8;
+```
 命名建议用反引号包裹。防止与关键字冲突
 
+**查看已有的资料库**
+```SQL
 SHOW DATABASES
-查看已有的资料库
+```
 
-DROP DATABASE 用于删除资料库
+**用于删除资料库**
+```SQL
+DROP DATABASE 数据库名称
+```
 e.g.
-DROP DATABASE \`database_name`;
+```SQL
+DROP DATABASE `database_name`;
+```
 
-USE
-使用某个资料库
+**使用某个资料库**
+```SQL
+USE 数据库;
+```
 e.g.
-USE \`database_name`;
+```SQL
+USE `database_name`;
+```
 
+**创建一个表格**
+```SQL
 CREATE TABLE
-创建一个表格
+```
 e.g.
 
 ```SQL
@@ -189,12 +206,27 @@ SELECT  DISTINCT  `major` FROM `student`;
 
 ```
 
-
 ## 常用的资料类型
 
-INT 整数
-DECIMAL(m,n) 有小数点的数（一共m位，其中n位小数）
-VARCHAR(n)  字符串，最大长度为n
-BLOB  即Binary Large Object，可以为图片、视频、档案等等
-DATE  年-月-日 2025-01-21
-TIMESTAMP     "YYYY-MM-DD HH:MM:SS" 时间戳
+* 整形
+	- `INT` 4字节
+	- `TINYINT` 1字节
+	- `BIGINT` 8字节
+	后面可以跟着[(m)] [unsigned] [zerofill]
+
+- `DECIMAL(m,n)` 有小数点的数（一共m位，其中n位小数）
+- `VARCHAR(n)`  字符串，最大长度为n
+- CHAR(n) 定长字符串，长度不够会空格补齐。查询时自动去除空白(可选保留空白)。
+- BLOB  即Binary Large Object，可以为图片、视频、档案等等
+- DATE  年-月-日 2025-01-21
+- TIMESTAMP     "YYYY-MM-DD HH:MM:SS" 时间戳
+
+文本相关
+- text 保存变长的大字符串。最多到65535个字符。
+- mediumtext 最长2**24-1
+- longtext 最长2**32-1
+
+时间相关
+- datetime 1000-01-01 00：00：00到9999-12-31 23：59：59
+- timesamp 1970-01-01 00：00：00到2037年
+ 
