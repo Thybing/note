@@ -1,4 +1,4 @@
-概述
+# 概述
 
 程序运行在用户态
 
@@ -22,11 +22,3 @@ powerful  simple
 flexible  secure
 
 系统调用是操作系统提供服务的接口
-
-下面是几个系统调用的例程。
-copy
-open
-fork
-exec
-forkexec
-redirect
