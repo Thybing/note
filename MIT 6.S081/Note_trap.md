@@ -321,3 +321,101 @@ usertrapret(void)
 }
 ```
 
+
+### kerneltrap函数，在[kervelvec](#kernelvec)中调用
+
+在内核中的中断不会由于ecall触发，只会有硬件中断和异常。
+这里检查了并处理了硬件中断，如果是异常，则会panic掉。
+另外，如果硬件中断是由timer触发，则说明线程需要让出cpu。调用yield。
+最后，设置sepc和sstatus为进入该函数时的值，因为yield有可能触发trap。
+
+```c
+// interrupts and exceptions from kernel code go here via kernelvec,
+// on whatever the current kernel stack is.
+void 
+kerneltrap()
+{
+  int which_dev = 0;
+  uint64 sepc = r_sepc();
+  uint64 sstatus = r_sstatus();
+  uint64 scause = r_scause();
+  
+  if((sstatus & SSTATUS_SPP) == 0)
+    panic("kerneltrap: not from supervisor mode");
+  if(intr_get() != 0)
+    panic("kerneltrap: interrupts enabled");
+
+  if((which_dev = devintr()) == 0){
+    printf("scause %p\n", scause);
+    printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
+    panic("kerneltrap");
+  }
+
+  // give up the CPU if this is a timer interrupt.
+  if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
+    yield();
+
+  // the yield() may have caused some traps to occur,
+  // so restore trap registers for use by kernelvec.S's sepc instruction.
+  w_sepc(sepc);
+  w_sstatus(sstatus);
+}
+```
+
+### clockintr 定时器中断，用于响应timer interupt
+增加系统时间 ticks
+唤醒那些在等待 ticks 变化的进程（比如调用 sleep() 的进程）
+
+```c
+void
+clockintr()
+{
+  acquire(&tickslock);
+  ticks++;
+  wakeup(&ticks);
+  release(&tickslock);
+}
+```
+
+## kernelvec.S
+
+### kernelvec
+移动栈指针，在内核栈上开辟出栈空间，然后将寄存器上的值全部保存到栈。
+从这里可以看出来，正确运行kernelvec依赖于内核页表和正确的内核栈指针
+调用kerneltrap(trap.c)
+恢复从栈指针中保存的寄存器，销毁开辟的栈空间。
+(恢复时不要恢复tp寄存器，因为现在可能已经切换了CPU)
+sret
+
+```riscv
+kernelvec:
+        // make room to save registers.
+        addi sp, sp, -256
+
+        // save the registers.
+        sd ra, 0(sp)
+        sd sp, 8(sp)
+        ......
+        sd t5, 232(sp)
+        sd t6, 240(sp)
+
+	// call the C trap handler in trap.c
+        call kerneltrap
+
+        // restore registers.
+        ld ra, 0(sp)
+        ld sp, 8(sp)
+        ld gp, 16(sp)
+        // not this, in case we moved CPUs: ld tp, 24(sp)
+        ld t0, 32(sp)
+        ld t1, 40(sp)
+        ......
+        ld t5, 232(sp)
+        ld t6, 240(sp)
+
+        addi sp, sp, 256
+
+        // return to whatever we were doing in the kernel.
+        sret
+```
+
